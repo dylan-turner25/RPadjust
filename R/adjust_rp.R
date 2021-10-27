@@ -7,22 +7,65 @@
 #
 #
 #
-mc_reps <- 100
-large_adjustment <- .10
-small_adjustment <- .05
-rp_lb <- -2
-rp_ub <- 2
-lottery_probs_1 <- c(1,.5,.225,.125,.025)
-lottery_probs_2 <- c(0,.5,.775,.875,.975)
-lottery_payoffs_1 <- c(5,8,22,60,325)
-lottery_payoffs_2 <- c(0,3,2,0,0)
-sub_beliefs <- c(3,3,4,1)
-lottery_choice <- 3
-utility_function <- "crra"
-initial_wealth <- .0000001
-returned_obj <- "midpoint"
+# mc_reps <- 100
+# large_adjustment <- .10
+# small_adjustment <- .05
+# rp_lb <- -2
+# rp_ub <- 2
+# lottery_probs_1 <- c(1,.5,.225,.125,.025)
+# lottery_probs_2 <- c(0,.5,.775,.875,.975)
+# lottery_payoffs_1 <- c(5,8,22,60,325)
+# lottery_payoffs_2 <- c(0,3,2,0,0)
+# sub_beliefs <- c(3,3,3,3)
+# lottery_choice <- 3
+# utility_function <- "crra"
+# initial_wealth <- .0000001
+# returned_obj <- "midpoint"
+# rp_resolution <- .01
+
+# example:
 
 
+
+
+
+
+#' Adjusts experimentally elicited risk preferences using the methodology of Turner and Landry, 2021
+#'
+#' @param mc_reps numerical value representing the number of monte-carlo replications to use.
+#' @param large_adjustment numerical value representing the upper bound of the large adjustment as described by Turner and Landry, 2021
+#' @param small_adjustment numerical value representing the upper bound of the small adjustment as described by Turner and Landry, 2021
+#' @param lottery_probs_1 a numerical vector representing the probabilities of the first outcome occurring in each lottery 
+#' @param lottery_probs_2 a numerical vector representing the probabilities of the second outcome occurring in each lottery 
+#' @param lottery_payoffs_1 a numerical vector representing the payoffs if the first outcome occurs in each lottery 
+#' @param lottery_payoffs_2 a numerical vector representing the payoffs if the second outcome occurs in each lottery 
+#' @param rp_lb a numerical value representing the upper bound to consider for the risk preference coefficient. 
+#' @param rp_ub a numerical value representing the lower bound to consider for the risk preference coefficient.
+#' @param initial_wealth a numerical value representing the initial wealth to use for each respondent
+#' @param sub_beliefs a vector representing likert scale responses to each of the subjective probability belief elicitation questions in Turner and Landry, 2021
+#' @param utility_function a character vector representing the utility function to use for deriving the risk prefrences. The only current option is "crra".
+#' @param lottery_choice a numeric value representing the observed lottery choice of the survey respondent
+#' @param returned_obj a character vector representing how adjusted risk preferences should be returned. 
+#' Option are "range" or "midpoint". "range" will return two values representing the lower and upper bounds on the risk preference
+#' coefficeients that are compatiable with the respondent's observed choices and survey responses. "midpoint" will return a single
+#' value that is the midpoing of the upper and lower bounds.
+#' @param rp_resolution a numeric value representing the resolution to use for identifying risk preferences. 
+#' For example, a value of .01, will search the risk preference parameter space in 0.01 increments. This value can
+#' be adjusted to speed up computation if fine resolution is not required.
+#'
+#' @return returns either a range or midpoint (depending on the value of returned_obj) representing the adjusted risk preferences
+#' @export
+#' @importFrom stats runif
+#'
+#' @examples
+#' 
+#' 
+#' adjust_rp(mc_reps = 100, large_adjustment = .10, small_adjustment = .05,
+#' rp_lb = -2,rp_ub = 2,rp_resolution = .01,lottery_probs_1 = c(1,.5,.225,.125,.025),
+#' lottery_probs_2 = c(0,.5,.775,.875,.975),lottery_payoffs_1 = c(5,8,22,60,325),
+#' lottery_payoffs_2 = c(0,3,2,0,0),sub_beliefs = c(1,2,3,4),lottery_choice = 3,
+#' utility_function = "crra",initial_wealth = .0000001,returned_obj = "midpoint")
+#' 
 adjust_rp <- function(mc_reps, large_adjustment, small_adjustment, lottery_probs_1, lottery_probs_2,
                       lottery_payoffs_1, lottery_payoffs_2, rp_lb, rp_ub, initial_wealth, sub_beliefs,
                       utility_function, lottery_choice, returned_obj = "midpoint", rp_resolution = .01){
@@ -56,13 +99,22 @@ adjust_rp <- function(mc_reps, large_adjustment, small_adjustment, lottery_probs
   # largest possible interval (using the minimum lower bound and maximum upper bound)
   # is constructed which maximizes the likelihood that the respondent's true
   # CRRA coefficient is in the bound we construct.
+  
+  
+  
+   if(!(F %in% (sub_beliefs == 3))){
+     reps = 1
+   } else {
+     reps <- mc_reps
+   }
+  
 
   # get crra ranges, wrapping in sapply to vectorize over monte-carlo reps
-  crra_ranges <- sapply(seq(1,mc_reps,1), function(...){
+  crra_ranges <- sapply(seq(1,reps,1), function(...){
   # create a data frame of lottery probs as they were in the survey
-   for(k in 1:length(lottery_probs_1)){
-     assign(paste0("lot",k,"_p"), rep(lottery_probs_1[k],1)   )
-   }
+   # for(k in 1:length(lottery_probs_1)){
+   #   assign(paste0("lot",k,"_p"), rep(lottery_probs_1[k],1)   )
+   # }
 
 
   # lottery adjustments
@@ -70,28 +122,48 @@ adjust_rp <- function(mc_reps, large_adjustment, small_adjustment, lottery_probs
   large_adj_temp = runif(1,small_adjustment,large_adjustment) # large adjustment
 
   # adjust lottery probabilities in accordance with subjective beliefs
+  lot_probs_adjusted <- c(lottery_probs_1[1])
   for(k in 2: length(lottery_probs_1)){
-      # adjust if a small adjustment is warranted
-      if(sub_beliefs[k-1] %in% c(2,4)){
-        assign(paste0("lot",k,"_p"),  eval(parse(text = paste0("lot",k,"_p"))) * (1+small_adj_temp) )
+      
+      if(sub_beliefs[k-1]  == 1){
+        #assign(paste0("lot",k,"_p"),  eval(parse(text = paste0("lot",k,"_p"))) * (1+small_adj_temp) )
+        lot_probs_adjusted <- c(lot_probs_adjusted, lottery_probs_1[k] * (1-large_adj_temp))
+      }
+    
+      if(sub_beliefs[k-1]  == 2){
+        #assign(paste0("lot",k,"_p"),  eval(parse(text = paste0("lot",k,"_p"))) * (1+small_adj_temp) )
+        lot_probs_adjusted <- c(lot_probs_adjusted, lottery_probs_1[k] * (1-small_adj_temp))
+      }
+      
+      if(sub_beliefs[k-1]  == 3){
+        #assign(paste0("lot",k,"_p"),  eval(parse(text = paste0("lot",k,"_p"))) * (1+small_adj_temp) )
+        lot_probs_adjusted <- c(lot_probs_adjusted, lottery_probs_1[k])
+      }
+    
+      if(sub_beliefs[k-1]  == 4){
+        #assign(paste0("lot",k,"_p"),  eval(parse(text = paste0("lot",k,"_p"))) * (1+small_adj_temp) )
+        lot_probs_adjusted <- c(lot_probs_adjusted, lottery_probs_1[k] * (1+small_adj_temp))
+      }
+      
+      if(sub_beliefs[k-1]  == 5){
+        #assign(paste0("lot",k,"_p"),  eval(parse(text = paste0("lot",k,"_p"))) * (1+small_adj_temp) )
+        lot_probs_adjusted <- c(lot_probs_adjusted, lottery_probs_1[k] * (1+large_adj_temp))
       }
 
-      # adjust if a large adjustment is warranted
-      if(sub_beliefs[k-1] %in% c(1,5)){
-        assign(paste0("lot",k,"_p"),  eval(parse(text = paste0("lot",k,"_p"))) * (1+large_adj_temp) )
-      }
-    }
+   
+  }
 
   # calculate risk preferences using the calc_rp function
-  rp_range <- RPadjust::calc_rp(utility_function = "crra",
+  rp_range <- calc_rp(utility_function = "crra",
           lottery_choice = lottery_choice,
-          lottery_probs_1 = c(lot1_p, lot2_p, lot3_p, lot4_p, lot5_p),
-          lottery_probs_2 = c(1-lot1_p, 1-lot2_p, 1-lot3_p, 1-lot4_p, 1-lot5_p),
+          lottery_probs_1 = lot_probs_adjusted,
+          lottery_probs_2 = (1-lot_probs_adjusted),
           lottery_payoffs_1 = lottery_payoffs_1,
           lottery_payoffs_2 = lottery_payoffs_2,
           rp_ub = rp_ub,
           rp_lb = rp_lb,
-          initial_wealth = initial_wealth)
+          initial_wealth = initial_wealth,
+          rp_resolution = .01)
 
 
 
@@ -124,20 +196,6 @@ adjust_rp <- function(mc_reps, large_adjustment, small_adjustment, lottery_probs
 
 
 
-adjust_rp(mc_reps = 100,
-          large_adjustment = .10,
-          small_adjustment = .05,
-          rp_lb = -2,
-          rp_ub = 2,
-          rp_resolution = .01,
-          lottery_probs_1 = c(1,.5,.225,.125,.025),
-          lottery_probs_2 = c(0,.5,.775,.875,.975),
-          lottery_payoffs_1 = c(5,8,22,60,325),
-          lottery_payoffs_2 = c(0,3,2,0,0),
-          sub_beliefs = c(1,2,3,4),
-          lottery_choice = 3,
-          utility_function = "crra",
-          initial_wealth = .0000001,
-          returned_obj = "midpoint")
+
 
 

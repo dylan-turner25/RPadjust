@@ -1,20 +1,32 @@
-#' Calculates risk preferences from individuals observed lottery choice.
+#' Helper function that calculates risk preferences from individuals observed lottery choice.
 #'
-#' @param utility_function 
-#' @param lottery_choice 
-#' @param lottery_probs_1 
-#' @param lottery_probs_2 
-#' @param lottery_payoffs_1 
-#' @param lottery_payoffs_2 
-#' @param rp_ub 
-#' @param rp_lb 
-#' @param rp_resolution 
-#' @param initial_wealth 
-#'
+#' @param utility_function a character vector representing the utility function to use for deriving the risk preferences. The only current option is "crra".
+#' @param lottery_choice a numeric value representing the observed lottery choice of the survey respondent
+#' @param lottery_probs_1 a numerical vector representing the probabilities of the first outcome occurring in each lottery 
+#' @param lottery_probs_2 a numerical vector representing the probabilities of the second outcome occurring in each lottery 
+#' @param lottery_payoffs_1 a numerical vector representing the payoffs if the first outcome occurs in each lottery 
+#' @param lottery_payoffs_2 a numerical vector representing the payoffs if the second outcome occurs in each lottery 
+#' @param rp_lb a numerical value representing the upper bound to consider for the risk preference coefficient. 
+#' @param rp_ub a numerical value representing the lower bound to consider for the risk preference coefficient.
+#' @param rp_resolution a numeric value representing the resolution to use for identifying risk preferences. 
+#' For example, a value of .01, will search the risk preference parameter space in 0.01 increments. This value can
+#' be adjusted to speed up computation if fine resolution is not required.#' 
+#' @param initial_wealth a numerical value representing the initial wealth to use for each respondent
+
 #' @return returns adjusted risk preferences
 #' @export
 #'
 #' @examples
+#' calc_rp(utility_function = "crra",
+#'        lottery_choice = 1,
+#'        lottery_probs_1 = c(1,.5,.225,.125,.025),
+#'        lottery_probs_2 = c(0,.5,.775,.875,.975),
+#'        lottery_payoffs_1 = c(5,8,22,60,325),
+#'        lottery_payoffs_2 = c(0,3,2,0,0),
+#'        rp_ub = 2,
+#'        rp_lb = -2,
+#'        initial_wealth = .000001)
+#'        
 calc_rp <- function(utility_function, lottery_choice, lottery_probs_1, lottery_probs_2,
                     lottery_payoffs_1, lottery_payoffs_2, rp_ub, rp_lb, 
                     rp_resolution ,initial_wealth){
@@ -64,12 +76,3 @@ calc_rp <- function(utility_function, lottery_choice, lottery_probs_1, lottery_p
 
 }
 
-# calc_rp(utility_function = "crra",
-#         lottery_choice = 1,
-#         lottery_probs_1 = c(1,.5,.225,.125,.025),
-#         lottery_probs_2 = c(0,.5,.775,.875,.975),
-#         lottery_payoffs_1 = c(5,8,22,60,325),
-#         lottery_payoffs_2 = c(0,3,2,0,0),
-#         rp_ub = 2,
-#         rp_lb = -2,
-#         initial_wealth = .000001)
