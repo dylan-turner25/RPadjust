@@ -18,7 +18,7 @@ calc_rp(
 )
 }
 \arguments{
-\item{utility_function}{a character vector representing the utility function to use for deriving the risk prefrences. The only current option is "crra".}
+\item{utility_function}{a character vector representing the utility function to use for deriving the risk preferences. The only current option is "crra".}
 
 \item{lottery_choice}{a numeric value representing the observed lottery choice of the survey respondent}
 
