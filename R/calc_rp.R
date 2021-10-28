@@ -21,12 +21,14 @@
 #'        lottery_choice = 1,
 #'        lottery_probs_1 = c(1,.5,.225,.125,.025),
 #'        lottery_probs_2 = c(0,.5,.775,.875,.975),
-#'        lottery_payoffs_1 = c(5,8,22,60,325),
+#'        lottery_payoffs_1 = c(5,8,22,60,300),
 #'        lottery_payoffs_2 = c(0,3,2,0,0),
 #'        rp_ub = 2,
 #'        rp_lb = -2,
-#'        initial_wealth = .000001)
-#'        
+#'        initial_wealth = .00000000000000001,
+#'        rp_resolution = .05)
+#'       
+
 calc_rp <- function(utility_function, lottery_choice, lottery_probs_1, lottery_probs_2,
                     lottery_payoffs_1, lottery_payoffs_2, rp_ub, rp_lb, 
                     rp_resolution ,initial_wealth){
@@ -41,38 +43,69 @@ calc_rp <- function(utility_function, lottery_choice, lottery_probs_1, lottery_p
 
     # generate possible crra values to search over
     crra_vals <- data.frame(crra = seq(rp_lb,rp_ub,rp_resolution), possible_value = NA)
-
-
-    # returns TRUE if expected utility suggests the lottery choice that was choosen by the survey respondent.
-    possible_value <- function(r){
-      # calculate expected utilities for a given risk preference and lottery characteristics
-      eu <- data.frame(lot = rep(NA,length(lottery_probs_1)), eu = NA)
-      for(k in 1:length(lottery_probs_1)){
-        eu$eu[k] <- lottery_probs_1[k] * crra_u(initial_wealth+lottery_payoffs_1[k],r) +
-                            lottery_probs_2[k] * crra_u(initial_wealth+lottery_payoffs_2[k],r)
-        eu$lot[k] <- paste0("eu_",k)
-      }
-
-      # figure out which lottery would have been chosen with the risk preferences currently being used
-      choice_temp <- as.numeric(gsub("eu_","",eu$lot[which(eu$eu == max(eu$eu))]))
-
-      return(choice_temp == lottery_choice)
-    }
+    crra_vals$crra <- replace(crra_vals$crra, crra_vals$crra == 1, 1.0001)
 
     # apply the possible values function to each crra in crra_vals
-    crra_vals$possible_value <-  sapply(crra_vals$crra, possible_value)
-
+    eu_implied_choice <- sapply(crra_vals$crra, calc_eu_choice, 
+                                        lottery_probs_1 = lottery_probs_1,
+                                        initial_wealth = initial_wealth,
+                                        lottery_payoffs_1 = lottery_payoffs_1,
+                                        lottery_probs_2 = lottery_probs_2, 
+                                        lottery_payoffs_2 = lottery_payoffs_2,
+                                        lottery_choice = lottery_choice)
+    
+    eu_implied_choice <- t(array(as.numeric(unlist(eu_implied_choice)), dim=c(1,length(crra_vals$crra))))
+    crra_vals$eu_implied_choice <- eu_implied_choice
+    crra_vals$possible_value <- c(crra_vals$eu_implied_choice == lottery_choice)
 
     # remove rows that correspond to crra values than aren't possible values
     crra_vals <- crra_vals[which(crra_vals$possible_value == T),]
-
+    
     # possible range of crra values
-    crra_range <- c(min(crra_vals$crra),max(crra_vals$crra))
+    if(nrow(crra_vals) > 0){
+      crra_range <- c(min(crra_vals$crra),max(crra_vals$crra))
+    }
+    
+    # deal with discontinuity
+    if(nrow(crra_vals) == 0){
+      pos_val <- eu_implied_choice
+      for(k in 1:(length(pos_val)-1)){
+        if(pos_val[k] > lottery_choice & pos_val[k+1] < lottery_choice){
+          pos_val[k] <- T
+        } 
+        if(pos_val[k] < lottery_choice & pos_val[k+1] > lottery_choice){
+          pos_val[k] <- T
+        } 
+        if(pos_val[k] < lottery_choice & pos_val[k+1] < lottery_choice){
+          pos_val[k] <- F
+        }
+        if(pos_val[k] > lottery_choice & pos_val[k+1] > lottery_choice){
+          pos_val[k] <- F
+        }
+        if(k == (length(pos_val)-1) ){
+          pos_val[k+1] <- F
+        }
+      }
+      pos_val <- as.logical(pos_val)
+      
+      crra_vals <- data.frame(crra = seq(rp_lb,rp_ub,rp_resolution), possible_value = NA)
+      crra_vals$crra <- replace(crra_vals$crra, crra_vals$crra == 1, 1.0001)
+      crra_vals$possible_value <- pos_val
+      
+      # remove rows that correspond to crra values than aren't possible values
+      crra_vals <- crra_vals[which(crra_vals$possible_value == T),]
+      crra_range <- c(crra_vals$crra-rp_resolution,crra_vals$crra+rp_resolution)
+      
+    }
 
+ 
     # return the range
     return(crra_range)
 
   }
 
 }
+
+
+
 

@@ -64,7 +64,7 @@ df <- data.frame(lottery_choice = sample(seq(1,5,1),n,replace = T),
 # populate the df with fake data
 df$lottery_probs_1 <- list( c(1,.5,.225,.125,.025) ) 
 df$lottery_probs_2 <- list( c(0,.5,.775,.875,.975) )
-df$lottery_payoffs_1 <- list( c(5,8,22,60,325) )
+df$lottery_payoffs_1 <- list( c(5,8,22,60,300) )
 df$lottery_payoffs_2 <- list( c(0,3,2,0,0) )
 for(k in 1:nrow(df)){
   df$subjective_beliefs[k] <- list( c(sample(seq(1,5,1),1,replace = T),sample(seq(1,5,1),1,replace = T) ,sample(seq(1,5,1),1,replace = T),sample(seq(1,5,1),1,replace = T) ))
@@ -90,13 +90,12 @@ risk_pref_unadjusted <- adjust_rp(mc_reps = 100, # the number of monte-carlo rep
                        lottery_probs_1 = df$lottery_probs_1[obs][[1]], # probabilities that the first outcome in each lottery occurs
                        lottery_probs_2 = df$lottery_probs_2[obs][[1]], # probabilities that the second outcome in each lottery occurs
                        lottery_payoffs_1 = df$lottery_payoffs_1[obs][[1]], # payoffs for the first outcome in each lottery
-                       lottery_payoffs_2 = df$lottery_probs_1[obs][[1]], # payoffs for the second outcome in each lottery
+                       lottery_payoffs_2 = df$lottery_payoffs_2[obs][[1]], # payoffs for the second outcome in each lottery
                        sub_beliefs = c(3,3,3,3), # likert responses to the subjective probability debriefing questions, 
                                                  # setting all equal to 3's will produce unadjusted risk preference parameters
                        lottery_choice = df$lottery_choice[obs], # the observed lottery choice of the respondent
                        utility_function = "crra", # the utility function to use in the risk preference calculation (crra is the only choice right now)
-                       initial_wealth = .0000001, # initial wealth to assume. Assuming a positive, but 
-                                                  # arbitrarily close to zero initial wealth. I.e., assuming the agent is playing the lottery in isolation
+                       initial_wealth = 0.000000000000000001, # initial wealth to assume. Assuming arbitrarily close to zero initial wealth. I.e., assuming the agent is playing the lottery in isolation
                        returned_obj = "range") # will returning the range of the implied crra interval (can set to "midpoint" to get the midpoint of the implied range)
 
 print(risk_pref_unadjusted)

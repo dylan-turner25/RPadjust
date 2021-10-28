@@ -51,10 +51,11 @@ calc_rp(utility_function = "crra",
        lottery_choice = 1,
        lottery_probs_1 = c(1,.5,.225,.125,.025),
        lottery_probs_2 = c(0,.5,.775,.875,.975),
-       lottery_payoffs_1 = c(5,8,22,60,325),
+       lottery_payoffs_1 = c(5,8,22,60,300),
        lottery_payoffs_2 = c(0,3,2,0,0),
        rp_ub = 2,
        rp_lb = -2,
-       initial_wealth = .000001)
-       
+       initial_wealth = .00000000000000001,
+       rp_resolution = .05)
+      
 }

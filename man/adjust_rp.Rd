@@ -65,8 +65,6 @@ returns either a range or midpoint (depending on the value of returned_obj) repr
 Adjusts experimentally elicited risk preferences using the methodology of Turner and Landry, 2021
 }
 \examples{
-
-
 adjust_rp(mc_reps = 100, large_adjustment = .10, small_adjustment = .05,
 rp_lb = -2,rp_ub = 2,rp_resolution = .01,lottery_probs_1 = c(1,.5,.225,.125,.025),
 lottery_probs_2 = c(0,.5,.775,.875,.975),lottery_payoffs_1 = c(5,8,22,60,325),

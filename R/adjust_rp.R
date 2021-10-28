@@ -1,12 +1,3 @@
-# df <- data %>% select(contains())
-#     # need subjective beliefs on weather probabilities
-#     # need lottery choices
-#     # lottery payoffs
-#     # lottery payoff probabilities
-#
-#
-#
-#
 # mc_reps <- 100
 # large_adjustment <- .10
 # small_adjustment <- .05
@@ -16,17 +7,38 @@
 # lottery_probs_2 <- c(0,.5,.775,.875,.975)
 # lottery_payoffs_1 <- c(5,8,22,60,325)
 # lottery_payoffs_2 <- c(0,3,2,0,0)
-# sub_beliefs <- c(3,3,3,3)
-# lottery_choice <- 3
+# sub_beliefs <- c(1,4,3,4)
+# lottery_choice <- 1
 # utility_function <- "crra"
 # initial_wealth <- .0000001
 # returned_obj <- "midpoint"
 # rp_resolution <- .01
+# 
+# obs <- 1
+# mc_reps = 100 # the number of monte-carlo reps to use
+# large_adjustment = .10  # the upper bound on the large adjustment interval
+# small_adjustment = .05 # the upper bound on the small adjustment interval
+# rp_lb = -2 # the lower bound on the range of CRRA values to consider
+# rp_ub = 2 # the upper bound on the range of CRRA values to consider
+# rp_resolution = .01 # the resolution of the CRRA value (controls how finely we search the parameter space)
+# lottery_probs_1 = df$lottery_probs_1[obs][[1]] # probabilities that the first outcome in each lottery occurs
+# lottery_probs_2 = df$lottery_probs_2[obs][[1]] # probabilities that the second outcome in each lottery occurs
+# lottery_payoffs_1 = df$lottery_payoffs_1[obs][[1]] # payoffs for the first outcome in each lottery
+# lottery_payoffs_2 = df$lottery_payoffs_2[obs][[1]] # payoffs for the second outcome in each lottery
+# sub_beliefs = c(3,3,3,3) # likert responses to the subjective probability debriefing questions
+# # setting all equal to 3's will produce unadjusted risk preference parameters
+# lottery_choice = df$lottery_choice[obs] # the observed lottery choice of the respondent
+# utility_function = "crra" # the utility function to use in the risk preference calculation (crra is the only choice right now)
+# initial_wealth = 0 # initial wealth to assume. Assuming a positive but
+# # arbitrarily close to zero initial wealth. I.e. assuming the agent is playing the lottery in isolation
+# returned_obj = "range"
 
-# example:
 
-
-
+# adjust_rp(mc_reps = 100, large_adjustment = .10, small_adjustment = .05,
+# rp_lb = -2,rp_ub = 2,rp_resolution = .05,lottery_probs_1 = c(1,.5,.225,.125,.025),
+# lottery_probs_2 = c(0,.5,.775,.875,.975),lottery_payoffs_1 = c(5,8,22,60,325),
+# lottery_payoffs_2 = c(0,3,2,0,0),sub_beliefs = c(1,2,3,4),lottery_choice = 3,
+# utility_function = "crra",initial_wealth = .0000001,returned_obj = "midpoint")
 
 
 
@@ -58,8 +70,6 @@
 #' @importFrom stats runif
 #'
 #' @examples
-#' 
-#' 
 #' adjust_rp(mc_reps = 100, large_adjustment = .10, small_adjustment = .05,
 #' rp_lb = -2,rp_ub = 2,rp_resolution = .01,lottery_probs_1 = c(1,.5,.225,.125,.025),
 #' lottery_probs_2 = c(0,.5,.775,.875,.975),lottery_payoffs_1 = c(5,8,22,60,325),
@@ -69,7 +79,7 @@
 adjust_rp <- function(mc_reps, large_adjustment, small_adjustment, lottery_probs_1, lottery_probs_2,
                       lottery_payoffs_1, lottery_payoffs_2, rp_lb, rp_ub, initial_wealth, sub_beliefs,
                       utility_function, lottery_choice, returned_obj = "midpoint", rp_resolution = .01){
-
+ 
   #lapply over mc_reps
   # check to make sure the large and small adjustment vectors are the same length
   # if(length(small_adjustments) != length(large_adjustments)){
@@ -120,7 +130,8 @@ adjust_rp <- function(mc_reps, large_adjustment, small_adjustment, lottery_probs
   # lottery adjustments
   small_adj_temp = runif(1,.01,small_adjustment) # small adjustment
   large_adj_temp = runif(1,small_adjustment,large_adjustment) # large adjustment
-
+  
+  
   # adjust lottery probabilities in accordance with subjective beliefs
   lot_probs_adjusted <- c(lottery_probs_1[1])
   for(k in 2: length(lottery_probs_1)){
@@ -163,7 +174,7 @@ adjust_rp <- function(mc_reps, large_adjustment, small_adjustment, lottery_probs
           rp_ub = rp_ub,
           rp_lb = rp_lb,
           initial_wealth = initial_wealth,
-          rp_resolution = .01)
+          rp_resolution = rp_resolution)
 
 
 
@@ -192,6 +203,14 @@ adjust_rp <- function(mc_reps, large_adjustment, small_adjustment, lottery_probs
 
 
 }
+
+
+# adjust_rp(mc_reps = 100, large_adjustment = .10, small_adjustment = .05,
+# rp_lb = -2,rp_ub = 2,rp_resolution = .01,lottery_probs_1 = c(1,.5,.225,.125,.025),
+# lottery_probs_2 = c(0,.5,.775,.875,.975),lottery_payoffs_1 = c(5,8,22,60,325),
+# lottery_payoffs_2 = c(0,3,2,0,0),sub_beliefs = c(1,2,3,4),lottery_choice = 3,
+# utility_function = "crra",initial_wealth = .0000001,returned_obj = "midpoint")
+
 
 
 
