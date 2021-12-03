@@ -67,38 +67,48 @@ calc_rp <- function(utility_function, lottery_choice, lottery_probs_1, lottery_p
     }
     
     # deal with discontinuity
-    if(nrow(crra_vals) == 0){
+    if (nrow(crra_vals) == 0) {
       pos_val <- eu_implied_choice
-      for(k in 1:(length(pos_val)-1)){
-        if(pos_val[k] > lottery_choice & pos_val[k+1] < lottery_choice){
+      for (k in 1:(length(pos_val) - 1)) {
+        skip <- 0
+        if (pos_val[k] > lottery_choice & pos_val[k + 
+                                                  1] < lottery_choice & skip == 0) {
           pos_val[k] <- T
-        } 
-        if(pos_val[k] < lottery_choice & pos_val[k+1] > lottery_choice){
+          skip <- 1
+        }
+        if (pos_val[k] < lottery_choice & pos_val[k + 
+                                                  1] > lottery_choice & skip == 0) {
           pos_val[k] <- T
-        } 
-        if(pos_val[k] < lottery_choice & pos_val[k+1] < lottery_choice){
-          pos_val[k] <- F
+          skip <- 1
         }
-        if(pos_val[k] > lottery_choice & pos_val[k+1] > lottery_choice){
+        if (pos_val[k] < lottery_choice & pos_val[k + 
+                                                  1] < lottery_choice & skip == 0) {
           pos_val[k] <- F
+          skip <- 1
         }
-        if(k == (length(pos_val)-1) ){
-          pos_val[k+1] <- F
+        if (pos_val[k] > lottery_choice & pos_val[k + 
+                                                  1] > lottery_choice & skip == 0) {
+          pos_val[k] <- F
+          skip <- 1
+        }
+        if (k == (length(pos_val) - 1)) {
+          pos_val[k + 1] <- F
+          skip <- 1
         }
       }
       pos_val <- as.logical(pos_val)
-      
-      crra_vals <- data.frame(crra = seq(rp_lb,rp_ub,rp_resolution), possible_value = NA)
-      crra_vals$crra <- replace(crra_vals$crra, crra_vals$crra == 1, 1.0001)
+      crra_vals <- data.frame(crra = seq(rp_lb, rp_ub, 
+                                         rp_resolution), possible_value = NA)
+      crra_vals$crra <- replace(crra_vals$crra, crra_vals$crra == 
+                                  1, 1.0001)
       crra_vals$possible_value <- pos_val
-      
-      # remove rows that correspond to crra values than aren't possible values
-      crra_vals <- crra_vals[which(crra_vals$possible_value == T),]
-      crra_range <- c(crra_vals$crra-rp_resolution,crra_vals$crra+rp_resolution)
-      
+      crra_vals <- crra_vals[which(crra_vals$possible_value == 
+                                     T), ]
+      crra_range <- c(crra_vals$crra - rp_resolution, crra_vals$crra + 
+                        rp_resolution)
     }
-
- 
+    
+  
     # return the range
     return(crra_range)
 
